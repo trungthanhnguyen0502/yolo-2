@@ -1,5 +1,5 @@
 class BoundBox:
-    def __init__(self, class_num):
+    def __init__(self):
         self.x, self.y, self.w, self.h, self.c, self.probs = 0., 0., 0., 0., 0., 0.
     
     def iou(self, box):

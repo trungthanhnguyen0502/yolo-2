@@ -26,7 +26,7 @@ def aug_img(img_data, NORM_H= 416, NORM_W = 416):
     flip = np.random.binomial(1, .5)
     if flip > 0.5:
         img = cv2.flip(img, 1)
-    img = img / (255)
+    img = img/(255)
 
     # resize the image to standard size
     img = cv2.resize(img, (NORM_H, NORM_W))
@@ -101,7 +101,7 @@ def data_gen(imgs_data, batch_size, NORM_W = 416, NORM_H = 416, GRID_W = 13, GRI
     return x_batch, y_batch
 
 
-def interpret_netout(image, netout, CLASS, GRID_H = 13, GRID_W = 13):
+def interpret_netout(image, netout, GRID_H = 13, GRID_W = 13):
     BOX = 5
     boxes = []
     THRESHOLD = 0.3
@@ -112,7 +112,7 @@ def interpret_netout(image, netout, CLASS, GRID_H = 13, GRID_W = 13):
     for row in range(GRID_H):
         for col in range(GRID_W):
             for b in range(BOX):
-                box = BoundBox(CLASS)
+                box = BoundBox()
                 # first 5 weights for x, y, w, h and confidence
                 box.x, box.y, box.w, box.h, box.c = netout[row,col,b,:5]
                 box.col, box.row = col, row
@@ -122,14 +122,14 @@ def interpret_netout(image, netout, CLASS, GRID_H = 13, GRID_W = 13):
                 box.h = ANCHORS[2 * b + 1] * np.exp(box.h) / GRID_H
                 box.c = sigmoid(box.c)
 
-                classes = netout[row,col,b,5:]
+                classes = netout[row,col,b,5]
                 box.probs = softmax(classes) * box.c
                 box.probs *= box.probs > THRESHOLD
-                    
+                boxes.append(box)
     sorted_indices = list(reversed(np.argsort([box.probs for box in boxes])))
     for i in range(len(sorted_indices)):
         index_i = sorted_indices[i]
-        if boxes[index_i].probs == 0:
+        if boxes[index_i].probs <= 0:
             continue
         else:
             for j in range(i+1, len(sorted_indices)):
